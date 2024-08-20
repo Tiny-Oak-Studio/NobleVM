@@ -19,7 +19,10 @@ enable_testing()
 
 add_executable(
         NobleVMTests
+        VirtualMachine.cpp
+        VirtualMachine.h
         NobleVMTests/NobleVMTests.cpp
+        NobleVMTests/VirtualMachineTests.cpp
 )
 target_link_libraries(
         NobleVMTests
