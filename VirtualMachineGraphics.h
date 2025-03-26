@@ -9,10 +9,9 @@ namespace Noble::VM
 {
     struct VirtualMachineGraphics
     {
-        VirtualMachineGraphics() = default;
         virtual ~VirtualMachineGraphics() = default;
 
-        virtual void Initialise();
+        virtual void Initialise() = 0;
         virtual void SetPixel(int x, int y, bool value) = 0;
         virtual bool GetPixel(int x, int y) = 0;
     };
