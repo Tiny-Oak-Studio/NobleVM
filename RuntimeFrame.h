@@ -1,9 +1,9 @@
 #ifndef RUNTIMEFRAME_H_INCLUDED
 #define RUNTIMEFRAME_H_INCLUDED
 
-#include "../NobleCore/Op.h"
-#include "../NobleCore/Value.h"
-#include "../NobleCore/Address.h"
+#include "NobleCore/Op.h"
+#include "NobleCore/Value.h"
+#include "NobleCore/Address.h"
 
 using namespace Noble::Core;
 
