@@ -3,7 +3,7 @@
 
 #include "RuntimeFrame.h"
 #include "VirtualMachineGraphics.h"
-#include "../NobleCore/List.h"
+#include "NobleCore/List.h"
 
 using namespace Noble::Core::Runtime;
 
