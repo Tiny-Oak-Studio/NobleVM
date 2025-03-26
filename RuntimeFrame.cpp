@@ -1,4 +1,4 @@
-#include "../RuntimeFrame.h"
+#include "RuntimeFrame.h"
 
 namespace Noble::VM
 {
