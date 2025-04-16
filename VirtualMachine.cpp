@@ -2,12 +2,6 @@
 
 namespace Noble::VM
 {
-	VirtualMachine::VirtualMachine(VirtualMachineGraphics* graphicsObject)
-	{
-		vmGraphics = graphicsObject;
-		vmGraphics->Initialise();
-	}
-
 	void VirtualMachine::RunFrame(Frame& frame)
     {
 		SetFrame(frame);
@@ -29,6 +23,11 @@ namespace Noble::VM
                     stack.Add(frame.constants[addr]);
 					break;
 				}
+        		case Op::Code::DefineGlobal:
+        		{
+
+					break;
+				}
         		case Op::Code::Divide:
 				{
 					const ValueType b = stack.Pop();
@@ -36,18 +35,36 @@ namespace Noble::VM
 					stack.Add(a / b);
 					break;
 				}
+        		case Op::Code::Equal:
+        		{
+					const ValueType b = stack.Pop();
+					const ValueType a = stack.Pop();
+					stack.Add(a == b);
+					break;
+				}
+        		case Op::Code::False:
+				{
+					stack.Add(false);
+					break;
+				}
         		case Op::Code::Greater:
 				{
 					const ValueType b = stack.Pop();
 					const ValueType a = stack.Pop();
-                    stack.Add(a > b ? Runtime::TrueValue : Runtime::FalseValue);
+                    stack.Add(a > b ? TrueValue : FalseValue);
+					break;
+				}
+        		case Op::Code::Jump:
+				{
+					const Address::Single offset = ReadAddress();
+					pc += offset;
 					break;
 				}
         		case Op::Code::Less:
 				{
 					const ValueType b = stack.Pop();
 					const ValueType a = stack.Pop();
-                    stack.Add(a < b ? Runtime::TrueValue : Runtime::FalseValue);
+                    stack.Add(a < b ? TrueValue : FalseValue);
 					break;
 				}
         		case Op::Code::Multiply:
@@ -65,7 +82,7 @@ namespace Noble::VM
         		case Op::Code::Not:
 				{
 					const ValueType a = stack.Pop();
-                    stack.Add(a ? Runtime::FalseValue : Runtime::TrueValue);
+                    stack.Add(a ? FalseValue : TrueValue);
 					break;
 				}
         		case Op::Code::Return:
@@ -97,4 +114,9 @@ namespace Noble::VM
         pc += sizeof(addr) / sizeof(Op::Type);
         return addr;
     }
+
+	bool VirtualMachine::IsFalsey(const ValueType value)
+	{
+		return IsNull(value) or (IsBool(value) and ToBool(value));
+	}
 }

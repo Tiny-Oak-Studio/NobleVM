@@ -22,14 +22,20 @@ add_executable(
         NobleVMTests
         VirtualMachine.cpp
         VirtualMachine.h
-        VirtualMachineGraphics.cpp
-        VirtualMachineGraphics.h
         NobleVMTests/NobleVMTests.cpp
         NobleVMTests/VirtualMachineTests.cpp
 )
 target_link_libraries(
         NobleVMTests
         GTest::gtest_main
+)
+
+add_executable(
+        NobleVM
+        VirtualMachine.cpp
+        VirtualMachine.h
+        main.cpp
+        main.h
 )
 
 include(GoogleTest)
