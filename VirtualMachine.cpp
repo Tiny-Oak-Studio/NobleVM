@@ -1,4 +1,13 @@
 #include "VirtualMachine.h"
+#include "NobleCore/Debug.h"
+#include <iostream>
+
+#define BINARY_OP(op) \
+		do { \
+			const FloatType a = ToFloat(Pop()); \
+			const FloatType b = ToFloat(Pop()); \
+			stack.push_back(ToValue(a op b)); \
+		} while (false)
 
 namespace Noble::VM
 {
@@ -8,50 +17,63 @@ namespace Noble::VM
 
         while (true)
         {
+			#ifdef DEBUG_ENABLED
+        	std::cout << static_cast<unsigned>(pc - &frame.ops[0]) << " ";
+			#endif
+
         	switch (*pc++)
             {
 				case Op::Code::Add:
                 {
-                    const ValueType b = stack.Pop();
-					const ValueType a = stack.Pop();
-                    stack.Add(a + b);
+                    BINARY_OP(+);
 	            	break;
 	            }
         		case Op::Code::Constant:
 				{
                     const Address::Single addr = ReadAddress();
-                    stack.Add(frame.constants[addr]);
+                    stack.push_back(frame.constants[addr]);
 					break;
 				}
         		case Op::Code::DefineGlobal:
         		{
-
+					globalVariables.push_back(Pop());
 					break;
 				}
         		case Op::Code::Divide:
 				{
-					const ValueType b = stack.Pop();
-					const ValueType a = stack.Pop();
-					stack.Add(a / b);
+					BINARY_OP(/);
 					break;
 				}
         		case Op::Code::Equal:
         		{
-					const ValueType b = stack.Pop();
-					const ValueType a = stack.Pop();
-					stack.Add(a == b);
+					BINARY_OP(==);
 					break;
 				}
         		case Op::Code::False:
 				{
-					stack.Add(false);
+					stack.push_back(FalseValue);
+					break;
+				}
+        		case Op::Code::GetGlobal:
+        		{
+					const Address::Single varAddress = ReadAddress();
+					stack.push_back(globalVariables[varAddress]);
+					break;
+				}
+        		case Op::Code::GetLocal:
+        		{
+					const Address::Single varAddress = ReadAddress();
+					stack.push_back(stack[varAddress]);
 					break;
 				}
         		case Op::Code::Greater:
 				{
-					const ValueType b = stack.Pop();
-					const ValueType a = stack.Pop();
-                    stack.Add(a > b ? TrueValue : FalseValue);
+					BINARY_OP(>);
+					break;
+				}
+        		case Op::Code::GreaterEqual:
+				{
+					BINARY_OP(>=);
 					break;
 				}
         		case Op::Code::Jump:
@@ -60,51 +82,133 @@ namespace Noble::VM
 					pc += offset;
 					break;
 				}
+        		case Op::Code::JumpIfFalse:
+				{
+					const Address::Single offset = ReadAddress();
+					if (IsFalsey(Peek()))
+					{
+						pc += offset;
+					}
+					break;
+				}
+        		case Op::Code::JumpIfTrue:
+				{
+					const Address::Single offset = ReadAddress();
+					if (IsTruthy(Peek()))
+					{
+						pc += offset;
+					}
+					break;
+				}
         		case Op::Code::Less:
 				{
-					const ValueType b = stack.Pop();
-					const ValueType a = stack.Pop();
-                    stack.Add(a < b ? TrueValue : FalseValue);
+					BINARY_OP(<);
+					break;
+				}
+        		case Op::Code::LessEqual:
+				{
+					BINARY_OP(<=);
+					break;
+				}
+        		case Op::Code::Loop:
+				{
+					const Address::Single offset = ReadAddress();
+					pc -= offset;
 					break;
 				}
         		case Op::Code::Multiply:
 				{
-					const ValueType b = stack.Pop();
-					const ValueType a = stack.Pop();
-					stack.Add(a * b);
+					BINARY_OP(*);
 					break;
 				}
         		case Op::Code::Negate:
 				{
-                    stack.Peek(0) *= -1;
+					ValueType val = Peek(0);
+                    val = ToValue(ToFloat(val) * -1);
+					stack.back() = val;
 					break;
 				}
         		case Op::Code::Not:
 				{
-					const ValueType a = stack.Pop();
-                    stack.Add(a ? FalseValue : TrueValue);
+					const ValueType a = stack.back();
+					stack.pop_back();
+                    stack.push_back(IsTruthy(a) ? FalseValue : TrueValue);
+					break;
+				}
+        		case Op::Code::NotEqual:
+        		{
+					BINARY_OP(!=);
+					break;
+				}
+        		case Op::Code::Null:
+        		{
+					stack.push_back(NullValue);
+					break;
+				}
+        		case Op::Code::Pop:
+        		{
+					stack.pop_back();
+					break;
+				}
+        		case Op::Code::PopN:
+        		{
+					const Address::Single popCount = ReadAddress();
+					for (Address::Single i = 0; i < popCount; ++i)
+					{
+						stack.pop_back();
+					}
+					break;
+				}
+        		case Op::Code::Print:
+        		{
+					PrintValue(Pop());
 					break;
 				}
         		case Op::Code::Return:
 				{
 					return;
 				}
+        		case Op::Code::SetGlobal:
+        		{
+					const Address::Single globalAddr = ReadAddress();
+					globalVariables[globalAddr] = stack.back();
+					break;
+				}
+        		case Op::Code::SetLocal:
+        		{
+					const Address::Single localAddr = ReadAddress();
+					stack[localAddr] = stack.back();
+					break;
+				}
         		case Op::Code::Subtract:
 				{
-					const ValueType b = stack.Pop();
-					const ValueType a = stack.Pop();
-					stack.Add(a - b);
+					BINARY_OP(-);
+					break;
+				}
+        		case Op::Code::True:
+        		{
+					stack.push_back(TrueValue);
 					break;
 				}
         		default: break;
             }
+			#ifdef DEBUG_ENABLED
+        	std::cout << Debug::OpToString(op) << " ";
+        	for (const auto i : stack)
+        	{
+        		std::cout << "[ ";
+        		PrintValue(i);
+        		std::cout << " ]";
+        	}
+        	std::cout << "\n";
+			#endif
         }
     }
 
 	void VirtualMachine::SetFrame(Frame& frame)
 	{
     	currentFrame = &frame;
-        pc = currentFrame->ops;
+        pc = &frame.ops[0];
     }
 
     Address::Single VirtualMachine::ReadAddress()
@@ -115,8 +219,25 @@ namespace Noble::VM
         return addr;
     }
 
-	bool VirtualMachine::IsFalsey(const ValueType value)
+	ValueType VirtualMachine::Peek(const Address::Single offset) const
 	{
-		return IsNull(value) or (IsBool(value) and ToBool(value));
+		return stack[stack.size() - offset - 1];
 	}
+
+	ValueType VirtualMachine::Pop()
+	{
+		const ValueType value = stack.back();
+		stack.pop_back();
+		return value;
+	}
+
+	void VirtualMachine::PrintValue(const ValueType value)
+	{
+		if (IsNull(value)) std::cout << "null";
+		else if (IsBool(value)) std::cout << (ToBool(value) ? "true" : "false");
+		else if (IsFloat(value)) std::cout << static_cast<float>(ToFloat(value));
+	}
+
 }
+
+#undef BINARY_OP

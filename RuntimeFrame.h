@@ -1,6 +1,8 @@
 #ifndef RUNTIMEFRAME_H_INCLUDED
 #define RUNTIMEFRAME_H_INCLUDED
 
+#include <vector>
+
 #include "NobleCore/Op.h"
 #include "NobleCore/Value.h"
 #include "NobleCore/Address.h"
@@ -11,13 +13,8 @@ namespace Noble::VM
 {
     struct Frame
     {
-        ~Frame();
-
-        Op::Type* ops = nullptr;
-        Address::Single numOps = 0;
-
-        Runtime::ValueType* constants = nullptr;
-        Address::Single numConstants = 0;
+        std::vector<Op::Type> ops;
+        std::vector<Runtime::ValueType> constants;
     };
 }
 

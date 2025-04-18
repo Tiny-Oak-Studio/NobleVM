@@ -20,10 +20,16 @@ enable_testing()
 
 add_executable(
         NobleVMTests
+        NobleCore/Value.cpp
+        NobleCore/Value.h
+        RuntimeFrame.cpp
+        RuntimeFrame.h
         VirtualMachine.cpp
         VirtualMachine.h
         NobleVMTests/NobleVMTests.cpp
         NobleVMTests/VirtualMachineTests.cpp
+        NobleCore/Debug.cpp
+        NobleCore/Debug.h
 )
 target_link_libraries(
         NobleVMTests
@@ -32,10 +38,15 @@ target_link_libraries(
 
 add_executable(
         NobleVM
+        NobleCore/Value.cpp
+        NobleCore/Value.h
+        RuntimeFrame.cpp
+        RuntimeFrame.h
         VirtualMachine.cpp
         VirtualMachine.h
+        NobleCore/Debug.cpp
+        NobleCore/Debug.h
         main.cpp
-        main.h
 )
 
 include(GoogleTest)
